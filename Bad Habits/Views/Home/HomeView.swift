@@ -5,8 +5,9 @@
 //  Created by Mustafa Yusuf on 14/01/25.
 //
 
-import SwiftUI
 import CoreData
+import MYCloudKit
+import SwiftUI
 
 struct HomeView: View {
     @FetchRequest(
@@ -18,11 +19,27 @@ struct HomeView: View {
     private var problems: FetchedResults<Problem>
     @State private var appState: AppState = .shared
     
+    @FetchRequest(
+        sortDescriptors: [
+            NSSortDescriptor(keyPath: \BadHabit.title, ascending: true)
+        ],
+        predicate: .init(format: "problem == %@", NSNull()),
+        animation: .default
+    )
+    private var ungroupedBadHabits: FetchedResults<BadHabit>
+    
     var body: some View {
         ScrollView {
             LazyVStack(spacing: Spacing.large) {
                 ForEach(problems) { problem in
                     ProblemSection(problem: problem)
+                }
+                
+                if !ungroupedBadHabits.isEmpty {
+                    Divider()
+                    ForEach(ungroupedBadHabits) { badHabit in
+                        ProblemSection.BadHabitCard(badHabit)
+                    }
                 }
             }
             .padding(Spacing.standard)
@@ -37,8 +54,7 @@ struct HomeView: View {
         }
         .task {
             Task {
-                await SyncEngine.shared.fetchChanges(in: .private)
-                await SyncEngine.shared.fetchChanges(in: .shared)
+                await AppState.shared.syncEngine.fetch()
             }
         }
     }

@@ -1,0 +1,15 @@
+{
+  "originHash" : "deb255195fc9d5ae7cd690c70f34d10b78a7ed4c9cc0726d6cde2fc961f5467f",
+  "pins" : [
+    {
+      "identity" : "mycloudkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mufasayc/MYCloudKit.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "88ccd236c1d2f532f72c9182b2d2d58d592a842f"
+      }
+    }
+  ],
+  "version" : 3
+}

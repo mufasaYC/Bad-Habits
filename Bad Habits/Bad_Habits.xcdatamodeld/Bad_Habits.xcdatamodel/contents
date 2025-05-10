@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23231" systemVersion="24B91" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23231" systemVersion="24E263" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="BadHabit" representedClassName="BadHabit" syncable="YES" codeGenerationType="class">
-        <attribute name="encodedSystemFields" optional="YES" attributeType="Binary"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <relationship name="oopsies" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Oopsie" inverseName="badHabit" inverseEntity="Oopsie"/>
         <relationship name="problem" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Problem" inverseName="badHabits" inverseEntity="Problem"/>
     </entity>
     <entity name="Oopsie" representedClassName="Oopsie" syncable="YES" codeGenerationType="class">
-        <attribute name="encodedSystemFields" optional="YES" attributeType="Binary"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="badHabit" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BadHabit" inverseName="oopsies" inverseEntity="BadHabit"/>
     </entity>
     <entity name="Problem" representedClassName="Problem" syncable="YES" codeGenerationType="class">
-        <attribute name="encodedSystemFields" optional="YES" attributeType="Binary"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <relationship name="badHabits" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BadHabit" inverseName="problem" inverseEntity="BadHabit"/>

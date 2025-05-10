@@ -5,14 +5,24 @@
 //  Created by Mustafa Yusuf on 15/01/25.
 //
 
+import CloudKit
+import MYCloudKit
 import SwiftUI
 
 extension HomeView {
+    struct ShareContent: Identifiable {
+        var id: String { share.recordID.recordName }
+        let share: CKShare
+        let container: CKContainer
+    }
+
     struct ProblemSection: View {
         @Environment(\.managedObjectContext) private var managedObjectContext
         @ObservedObject private var problem: Problem
         @FetchRequest private var badHabits: FetchedResults<BadHabit>
         
+        @State private var shareItem: ShareContent? = nil
+                
         init(problem: Problem) {
             self.problem = problem
             self._badHabits = .init(
@@ -39,8 +49,19 @@ extension HomeView {
                             AppState.shared.sheet = .create(.badHabit(problem: problem))
                         }
                         
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            Task { @MainActor in
+                                let result = try await AppState.shared.syncEngine.createShare(
+                                    with: problem.title ?? "Untitled Problem",
+                                    for: problem
+                                )
+                                
+                                self.shareItem = .init(share: result.share, container: result.container)
+                            }
+                        }
+                        
                         Button("Delete Problem (Liar)", systemImage: "trash", role: .destructive) {
-                            SyncEngine.shared.deleteZone(problem)
+                            AppState.shared.syncEngine.delete(problem)
                             managedObjectContext.delete(problem)
                             try! managedObjectContext.save()
                         }
@@ -59,6 +80,9 @@ extension HomeView {
                         AddBadHabitCard(problem: problem)
                     }
                 }
+            }
+            .sheet(item: $shareItem) { item in
+                CloudSharingView(share: item.share, container: item.container)
             }
         }
     }
@@ -80,6 +104,8 @@ extension HomeView.ProblemSection {
         @FetchRequest private var oopsies: FetchedResults<Oopsie>
         
         @State private var months: [Month] = []
+        
+        @State private var shareItem: HomeView.ShareContent? = nil
         
         private let rows: [GridItem] = [GridItem].init(
             repeating: .init(.flexible(), spacing: 2, alignment: .leading),
@@ -163,12 +189,31 @@ extension HomeView.ProblemSection {
                     AppState.shared.sheet = .update(.badHabit(badHabit))
                 }
                 
+                switch AppState.shared.shareType {
+                    case .recordWithMYZone, .recordWithCustomZone:
+                        
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            Task { @MainActor in
+                                let result = try await AppState.shared.syncEngine.createShare(
+                                    with: badHabit.title ?? "Untitled Bad Habit",
+                                    for: badHabit
+                                )
+                                
+                                self.shareItem = .init(share: result.share, container: result.container)
+                            }
+                        }
+                    case .zone:
+                        EmptyView()
+                }
                 Button("Delete Bad Habit 😂", systemImage: "trash", role: .destructive) {
-                    SyncEngine.shared.deleteObject(badHabit)
+                    AppState.shared.syncEngine.delete(badHabit)
                     
                     managedObjectContext.delete(badHabit)
                     try! managedObjectContext.save()
                 }
+            }
+            .sheet(item: $shareItem) { item in
+                CloudSharingView(share: item.share, container: item.container)
             }
         }
         
@@ -292,7 +337,7 @@ extension HomeView.ProblemSection.BadHabitCard {
             Button {
                 guard oopsies.isEmpty else {
                     oopsies.forEach { oopsie in
-                        SyncEngine.shared.deleteObject(oopsie)
+                        AppState.shared.syncEngine.delete(oopsie)
                         managedObjectContext.delete(oopsie)
                     }
                     return
@@ -302,7 +347,7 @@ extension HomeView.ProblemSection.BadHabitCard {
                 oopsie.timestamp = day
                 oopsie.badHabit = badHabit
                 
-                SyncEngine.shared.syncObject(oopsie)
+                AppState.shared.syncEngine.sync(oopsie)
                 
                 try! managedObjectContext.save()
             } label: {

@@ -5,6 +5,7 @@
 //  Created by Mustafa Yusuf on 15/01/25.
 //
 
+import MYCloudKit
 import SwiftUI
 
 extension UpdateView {
@@ -27,7 +28,7 @@ extension UpdateView {
             Button {
                 badHabit.title = title
                 
-                SyncEngine.shared.syncObject(badHabit)
+                AppState.shared.syncEngine.sync(badHabit)
                 
                 // add force unwrapping to Programming Problems
                 try! managedObjectContext.save()

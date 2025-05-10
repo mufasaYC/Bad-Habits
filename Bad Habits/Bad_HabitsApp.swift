@@ -5,8 +5,10 @@
 //  Created by Mustafa Yusuf on 14/01/25.
 //
 
-import UserNotifications
+import CloudKit
+import MYCloudKit
 import SwiftUI
+import UserNotifications
 
 @main
 struct Bad_HabitsApp: App {
@@ -32,12 +34,32 @@ final class AppDelegate: NSObject, UNUserNotificationCenterDelegate, UIApplicati
         return true
     }
     
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        configuration.delegateClass = SceneDelegate.self
+        return configuration
+    }
+    
     func application(
         _ application: UIApplication,
         didReceiveRemoteNotification userInfo: [AnyHashable : Any]
     ) async -> UIBackgroundFetchResult {
-        await SyncEngine.shared.fetchChanges(in: .private)
-        await SyncEngine.shared.fetchChanges(in: .shared)
+        await AppState.shared.syncEngine.fetch()
         return .newData
+    }
+}
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
+        // Handle quick actions here
+        completionHandler(true)
+    }
+    
+    func windowScene(_ windowScene: UIWindowScene, userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata) {
+        Task {
+            try await AppState.shared.syncEngine.acceptShare(
+                cloudKitShareMetadata: cloudKitShareMetadata
+            )
+        }
     }
 }
